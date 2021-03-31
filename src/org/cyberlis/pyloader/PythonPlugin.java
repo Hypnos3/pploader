@@ -1,5 +1,5 @@
 /*
-Copyright 2014 Lisovik Denis (Лисовик Денис) ckyberlis@gmail.com
+Copyright 2014 Lisovik Denis (Ð›Ð¸Ñ�Ð¾Ð²Ð¸Ðº Ð”ÐµÐ½Ð¸Ñ�) ckyberlis@gmail.com
 This file is part of PPLoader.
 PPLoader is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,7 +20,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -41,11 +43,11 @@ import org.bukkit.plugin.PluginLogger;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.cyberlis.dataloaders.PluginDataFile;
 import org.python.util.PythonInterpreter;
-
+/*
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebeaninternal.api.SpiEbeanServer;
 import com.avaje.ebeaninternal.server.ddl.DdlGenerator;
-
+*/
 /**
 */
 public class PythonPlugin implements Plugin {
@@ -59,7 +61,7 @@ private boolean isEnabled = false;
     //private ClassLoader classLoader = null;
     private Configuration config = null;
     private boolean naggable = true;
-    private EbeanServer ebean = null;
+    //private EbeanServer ebean = null;
     private FileConfiguration newConfig = null;
     private File configFile = null;
     private PluginLogger logger = null;
@@ -258,7 +260,7 @@ private boolean isEnabled = false;
     public final void setNaggable(boolean canNag) {
         this.naggable = canNag;
     }
-
+/*
     public EbeanServer getDatabase() {
         return ebean;
     }
@@ -276,7 +278,7 @@ private boolean isEnabled = false;
 
         gen.runScript(true, gen.generateDropDdl());
     }
-
+*/
     public Logger getLogger() {
         if (logger == null) {
             logger = new PluginLogger(this);
@@ -350,14 +352,16 @@ private boolean isEnabled = false;
 
             InputStream defConfigStream = getResource("config.yml");
             if (defConfigStream != null) {
-                YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
+            	Reader targetReader = new InputStreamReader(defConfigStream);
+                YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(targetReader);
 
                 newConfig.setDefaults(defConfig);
             }
         } else {
             InputStream defConfigStream = getResource("config.yml");
             if (defConfigStream != null) {
-                newConfig = YamlConfiguration.loadConfiguration(defConfigStream);
+            	Reader targetReader = new InputStreamReader(defConfigStream);
+                newConfig = YamlConfiguration.loadConfiguration(targetReader);
             }
         }
     }
