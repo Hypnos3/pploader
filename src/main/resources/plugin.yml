@@ -1,6 +1,9 @@
 name: PPLoader
 main: org.cyberlis.pyloader.PythonLoader
-version: 1.2.1
+version: 1.2.2
+api-version: 1.20
+authors: [cyberlis, DaBr01, hypnos3]
+website: https://github.com/Hypnos3/pploader
 commands:
   pploader:
     description: Load, unload or reload the specified python plugins.

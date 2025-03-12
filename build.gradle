@@ -1,10 +1,10 @@
 plugins {
     id 'java'
-    id("com.gradleup.shadow") version "8.3.6"
+    // id("com.gradleup.shadow") version "8.3.6"
 }
 
 group = 'org.cyberlis'
-version = '1.2.1'
+version = '1.2.2'
 apply plugin: 'java'
 
 repositories {
@@ -45,7 +45,7 @@ tasks.jar {
         attributes "Class-Path": "../lib/jython.jar ../../lib/jython.jar" // configurations.compile.collect { it.absolutePath }.join(" ")
     }
 }
-
+/*
 shadowJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     configurations = [project.configurations.runtimeClasspath]
@@ -54,4 +54,4 @@ shadowJar {
         exclude(dependency("org.spigotmc:spigot-api:1.21-R0.1-SNAPSHOT"))
         exclude(dependency("org.apache.commons:commons-lang3:3.17.0"))
     }
-}
+}*/

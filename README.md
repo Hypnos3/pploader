@@ -1,7 +1,7 @@
 PPLoader - Python Plugin Loader
 ====================
 
-The python plugin loader is a pluginloader for bukkit/spigot/paper to load python plugins
+The python plugin loader is a pluginloader for bukkit/spigot to load python plugins
 via jython.
 
 
@@ -162,6 +162,7 @@ plugin.py
 
 ## CHANGELOG
 
-1.2.1   first versio getting ready for PAPER
+1.2.2   first version in development (not executable) first adjustments for PAPER (but it seems Paper does not support Plugon interfaces from bukkit/spigot)
+1.2.1   first version in development (not executable) with build setup, fixes for new version of Jython
 1.2.0   smaller rework by [DaBr01/pploader](https://github.com/DaBr01/pploader)
 1.1.0   original plugin from [cyberlis/pploader](https://github.com/cyberlis/pploader)

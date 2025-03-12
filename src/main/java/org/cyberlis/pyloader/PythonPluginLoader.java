@@ -16,11 +16,15 @@ along with PPLoader.  If not, see <http://www.gnu.org/licenses/>
 */
 package org.cyberlis.pyloader;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,6 +53,7 @@ import org.bukkit.plugin.UnknownDependencyException;
 import org.cyberlis.dataloaders.PluginDataFile;
 import org.cyberlis.dataloaders.PluginPythonDirectory;
 import org.cyberlis.dataloaders.PluginPythonZip;
+import org.cyberlis.pyloader.PythonPlugin;
 import org.python.core.PyDictionary;
 import org.python.core.PyList;
 import org.python.core.PyObject;
@@ -238,11 +243,27 @@ public class PythonPluginLoader implements PluginLoader {
 
             // Run scripts designed to be run before plugin creation
             for (String script : pre_plugin_scripts) {
-                InputStream metastream = this.getClass().getClassLoader().getResourceAsStream("scripts/"+script);
-                interp.execfile(metastream);
-                metastream.close();
+                InputStream metastream = null;
+                try {
+                    metastream = this.getClass().getClassLoader().getResourceAsStream("scripts/"+script);
+                    if (metastream != null) {
+                        interp.execfile(metastream);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    server.getLogger().severe("Exception while executing \"" + script + "\": " + ex.getMessage());
+                } finally {
+                    if (metastream != null) {
+                        metastream.close();
+                    }
+                }
             }
 
+            String imports = "from org.cyberlis.pyloader import PythonPlugin\n";
+            instream = new SequenceInputStream(Collections.enumeration(Arrays.asList(
+                new ByteArrayInputStream(imports.getBytes()),
+                instream)));
+      
             interp.execfile(instream);
 
             instream.close();
@@ -255,7 +276,7 @@ public class PythonPluginLoader implements PluginLoader {
                     throw new InvalidPluginException(new Exception("Can not find Mainclass."));
                 }
             }
-            result = (PythonPlugin) pyClass.__call__().__tojava__(PythonPlugin.class);
+            result = (org.cyberlis.pyloader.PythonPlugin) pyClass.__call__().__tojava__(org.cyberlis.pyloader.PythonPlugin.class);
 
             interp.set("PYPLUGIN", result);
 
@@ -263,9 +284,20 @@ public class PythonPluginLoader implements PluginLoader {
 
             // Run scripts designed to be run after plugin creation
             for (String script : post_plugin_scripts) {
-                InputStream metastream = this.getClass().getClassLoader().getResourceAsStream("scripts/"+script);
-                interp.execfile(metastream);
-                metastream.close();
+                InputStream metastream = null;
+                try {
+                    metastream = this.getClass().getClassLoader().getResourceAsStream("scripts/"+script);
+                    if (metastream != null) {
+                        interp.execfile(metastream);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    server.getLogger().severe("Exception while executing \"" + script + "\": " + ex.getMessage());
+                } finally {
+                    if (metastream != null) {
+                        metastream.close();
+                    }
+                }
             }
 
             result.initialize(this, server, description, dataFolder, file);
