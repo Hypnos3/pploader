@@ -1,8 +1,8 @@
 PPLoader - Python Plugin Loader
 ====================
 
-The python plugin loader is a pluginloader for bukkit to load python plugins
-via jython. 
+The python plugin loader is a pluginloader for bukkit/spigot/paper to load python plugins
+via jython.
 
 
 Using the plugin loader
@@ -58,7 +58,7 @@ The 'main' field of plugin metadata has special behavior:
 plugin.yml is able to set all metadata fields that exist
 in bukkit, and should be used for all plugins that you release. plugin.yml is
 used in all java plugins (as it is the only option for java plugins). as such,
-opening up java plugin jars is a good way to learn what can go in it. 
+opening up java plugin jars is a good way to learn what can go in it.
 Or you can read about it here http://wiki.bukkit.org/Plugin_YAML
 Here isan example of plugin.yml:
 
@@ -87,8 +87,8 @@ much so that you can safely use the documentation on how to write a java
 plugin; simply translate it into python. the java2py tool may even work on
 existing java plugins (though no promises).
 
-Main class have to be extended from PythonPlugin class. (You don't have to 
-import it, because it is auto imported on plugin startup by scripts/preload.py 
+Main class have to be extended from PythonPlugin class. (You don't have to
+import it, because it is auto imported on plugin startup by scripts/preload.py
 in pploader.jar). Your main class must have onEnable and onDisable method.
 
 plugin.yml
@@ -106,24 +106,24 @@ plugin.py
 *********
 
     class SampleClass(PythonPlugin):
-        def onEnable(self):            
+        def onEnable(self):
             print "sample plugin enabled"
-        
+
         def onDisable(self):
             print "sample plugin disabled"
-            
+
 
 Event Handlers
 -----------------------------------
 
-Event Handlers is the main part of any plugin. Вся логика 
-обычно именно здесь. Создание Event Handlers немного отличается от стандартного 
-java api. As usual you must create Listener class, but extend it from 
-PythonListener class. (You don't have to import it, because it is auto imported 
+Event Handlers is the main part of any plugin. Вся логика
+обычно именно здесь. Создание Event Handlers немного отличается от стандартного
+java api. As usual you must create Listener class, but extend it from
+PythonListener class. (You don't have to import it, because it is auto imported
 on plugin startup by scripts/preload.py in pploader.jar). Methods of Listener
-class which will be event handlers must be decorated with PythonEventHandler. 
-You must pass EventType and EventPriority to PythonEventHandler decorator. 
-Example: 
+class which will be event handlers must be decorated with PythonEventHandler.
+You must pass EventType and EventPriority to PythonEventHandler decorator.
+Example:
 
 plugin.yml
 **********
@@ -146,7 +146,7 @@ plugin.py
         @PythonEventHandler(PlayerJoinEvent, EventPriority.NORMAL)
         def onPlayerJoin(self, event):
             event.getPlayer().sendMessage('Wellcome to rccraft server')
-            
+
     class SampleClass(PythonPlugin):
         def onEnable(self):
             pm = self.getServer().getPluginManager()
@@ -159,3 +159,9 @@ plugin.py
 
         def onCommand(self, sender, command, label, args):
             return False
+
+## CHANGELOG
+
+1.2.1   first versio getting ready for PAPER
+1.2.0   smaller rework by [DaBr01/pploader](https://github.com/DaBr01/pploader)
+1.1.0   original plugin from [cyberlis/pploader](https://github.com/cyberlis/pploader)

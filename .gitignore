@@ -6,3 +6,12 @@
 .project
 .settings/
 bin/
+out/
+.gradle/
+.idea/
+.off/
+gradle*.bat
+gradlew
+gradle.properties
+build/
+gradle/
