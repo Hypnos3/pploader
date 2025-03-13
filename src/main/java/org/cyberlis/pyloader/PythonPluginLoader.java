@@ -53,12 +53,16 @@ import org.bukkit.plugin.UnknownDependencyException;
 import org.cyberlis.dataloaders.PluginDataFile;
 import org.cyberlis.dataloaders.PluginPythonDirectory;
 import org.cyberlis.dataloaders.PluginPythonZip;
+import org.cyberlis.plugin.BukkitPluginManagerWrapper;
+import org.cyberlis.plugin.PaperPluginManagerWrapper;
+import org.cyberlis.plugin.PluginManagerWrapper;
 import org.cyberlis.pyloader.PythonPlugin;
 import org.python.core.PyDictionary;
 import org.python.core.PyList;
 import org.python.core.PyObject;
 import org.python.core.PyString;
 import org.python.core.PySystemState;
+import org.python.jline.internal.Log;
 import org.python.util.PythonInterpreter;
 import org.yaml.snakeyaml.error.YAMLException;
 
@@ -68,6 +72,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 public class PythonPluginLoader implements PluginLoader {
 
     private final Server server;
+    private PluginManagerWrapper pmw;
 
     /**
      * Filter - matches all of the following, for the regex illiterate:
@@ -325,7 +330,7 @@ public class PythonPluginLoader implements PluginLoader {
         if (loadedplugins.contains(name)) {
             return true;
         }
-        if (ReflectionHelper.isJavaPluginLoaded(server.getPluginManager(), name)) {
+        if (getPlugInManager().isJavaPluginLoaded(name)) {
             return true;
         }
         return false;
@@ -352,7 +357,7 @@ public class PythonPluginLoader implements PluginLoader {
                         ex);
             }
 
-            server.getPluginManager().callEvent(new PluginDisableEvent(plugin));
+            getPlugInManager().callEvent(new PluginDisableEvent(plugin));
 
             String pluginName = pyPlugin.getDescription().getName();
             if (loadedplugins.contains(pluginName)) {
@@ -387,14 +392,14 @@ public class PythonPluginLoader implements PluginLoader {
 
             // Perhaps abort here, rather than continue going, but as it stands,
             // an abort is not possible the way it's currently written
-            server.getPluginManager().callEvent(new PluginEnableEvent(plugin));
+            getPlugInManager().callEvent(new PluginEnableEvent(plugin));
         }
     }
 
     @Override
     public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(
             Listener listener, Plugin plugin) {
-        boolean useTimings = server.getPluginManager().useTimings();
+        boolean useTimings = getPlugInManager().useTimings();
         Map<Class<? extends Event>, Set<RegisteredListener>> ret = new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
         PythonListener pyListener = (PythonListener)listener;
 
@@ -467,5 +472,19 @@ public class PythonPluginLoader implements PluginLoader {
             }
         }
         return null;
+    }
+
+    private PluginManagerWrapper getPlugInManager() {
+        if (pmw == null) {
+            try {
+                Class.forName("io.papermc.paper.plugin.manager.PaperPluginManagerImpl");
+                pmw = new PaperPluginManagerWrapper();
+                Log.info("Paper detected, using PaperPluginManagerImpl");
+            } catch (ClassNotFoundException e) {
+                pmw = new BukkitPluginManagerWrapper();
+                Log.info("Paper not detected, using BukkitPluginManager");
+            }
+        }
+        return pmw;
     }
 }

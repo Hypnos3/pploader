@@ -1,6 +1,11 @@
 package org.cyberlis.plugin;
 
+import org.bukkit.Bukkit;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginLoader;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPluginLoader;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -10,15 +15,21 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
  
 public class PaperPluginManagerWrapper implements PluginManagerWrapper {
     private final Object instance;
+    private final Object manager;
+    private static Map<Pattern, PluginLoader> fileAssociations = null;
+    private static JavaPluginLoader javapluginloader = null;
+    private static Map<String, ?> javaLoaders = null;
 
     public PaperPluginManagerWrapper() {
         try {
             Class<?> pluginManagerClass = Class.forName("io.papermc.paper.plugin.manager.PaperPluginManagerImpl");
-            Object paperPluginManagerImpl = pluginManagerClass.getMethod("getInstance").invoke(null);
-            Field instanceManagerF = paperPluginManagerImpl.getClass().getDeclaredField("instanceManager");
+            this.manager = pluginManagerClass.getMethod("getInstance").invoke(null);
+            Field instanceManagerF = this.manager.getClass().getDeclaredField("instanceManager");
             instanceManagerF.setAccessible(true);
             this.instance = instanceManagerF.get(instanceManagerF);
         } catch (ClassNotFoundException e) {
@@ -106,5 +117,162 @@ public class PaperPluginManagerWrapper implements PluginManagerWrapper {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public void registerInterface(Class<? extends PluginLoader> loader) throws IllegalArgumentException {
+        try {
+            Method registerInterfaceMethod = this.instance.getClass().getMethod("registerInterface", Class.class);
+            registerInterfaceMethod.setAccessible(true);
+            registerInterfaceMethod.invoke(this.instance, loader);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void callEvent(Event event) throws IllegalStateException {
+        try {
+            Method callEventMethod = this.manager.getClass().getMethod("callEvent", Event.class);
+            callEventMethod.setAccessible(true);
+            callEventMethod.invoke(this.instance, event);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean useTimings() {
+        try {
+            Method useTimingsMethod = this.instance.getClass().getMethod("useTimings");
+            useTimingsMethod.setAccessible(true);
+            return (boolean)useTimingsMethod.invoke(this.manager);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | SecurityException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    /**
+     * Retrieve SimplePluginManager.fileAssociations. inform the user if they're too cool for us
+     * (ie, they're using a different plugin manager)
+     * @param pm PluginManager to attempt to retrieve fileAssociations from
+     * @param errorstr string to print if we fail when we print reason we failed
+     * @return fileAssociations map
+     */
+    @SuppressWarnings("unchecked")
+    public Map<Pattern, PluginLoader> getFileAssociations(String errorstr) {
+        if (fileAssociations != null) {
+            return fileAssociations;
+        }
+        PluginManager pm = Bukkit.getPluginManager();
+        Class<?> pmclass = null;
+        try {
+            pmclass = Class.forName("org.bukkit.plugin.SimplePluginManager");
+        } catch (ClassNotFoundException e) {
+            printerr("Did not find SimplePluginManager", errorstr);
+        } catch (Throwable t) {
+            printerr("Error while checking for SimplePluginManager", errorstr);
+            t.printStackTrace();
+        }
+
+        Field fieldFileAssociations = null;
+        if (pmclass != null) {
+            try {
+                fieldFileAssociations = pmclass.getDeclaredField("fileAssociations");
+            } catch (SecurityException e) {
+                printerr("SecurityException while checking for fileAssociations field in SimplePluginManager", errorstr);
+                e.printStackTrace();
+            } catch (NoSuchFieldException e) {
+                printerr("SimplePluginManager does not have fileAssociations field", errorstr);
+            } catch (Throwable t) {
+                printerr("Error while checking for fileAssociations field in SimplePluginManager", errorstr);
+                t.printStackTrace();
+            }
+        }
+
+        if (fieldFileAssociations != null) {
+            try {
+                fieldFileAssociations.setAccessible(true);
+                fileAssociations = (Map<Pattern, PluginLoader>) fieldFileAssociations.get(pm);
+            } catch (ClassCastException e) {
+                printerr("fileAssociations is not of type Map<Pattern, PluginLoader>", errorstr);
+
+            } catch (Throwable t) {
+                printerr("Error while getting fileAssociations from PluginManager", errorstr);
+                t.printStackTrace();
+            }
+        }
+        return fileAssociations;
+    }
+
+    /**
+     * Retrieve JavaPluginLoader from SimplePluginManager file associations
+     * @param pm plugin manager
+     * @return java plugin loader if found
+     */
+    public JavaPluginLoader getJavaPluginLoader() {
+        if (javapluginloader != null) {
+            return javapluginloader;
+        }
+
+        getFileAssociations(null);
+
+        for (Entry<Pattern, PluginLoader> entry : fileAssociations.entrySet()) {
+            if (entry.getKey().pattern().equals("\\.jar$")) {
+                javapluginloader = (JavaPluginLoader) entry.getValue();
+            }
+        }
+
+        return javapluginloader;
+    }
+
+    /**
+     * Retrieve loaders field from JavaPluginLoader instance
+     * @param pm plugin manager to search for JavaPluginLoader in (if necessary)
+     * @return loaders field retrieved
+     */
+    @SuppressWarnings("unchecked")
+    public  Map<String, ?> getJavaLoaders() {
+        if (javaLoaders != null) {
+            return javaLoaders;
+        }
+
+        getJavaPluginLoader();
+        if (javapluginloader == null) {
+            return null;
+        }
+
+        try {
+            Field fieldLoaders = JavaPluginLoader.class.getDeclaredField("loaders");
+            fieldLoaders.setAccessible(true);
+
+            javaLoaders = (Map<String, ?>) fieldLoaders.get(javapluginloader);
+            return javaLoaders;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Use JavaPluginLoader.loaders field to determine if JavaPluginLoader has loaded a plugin (false if unable to determine)
+     * @param pm plugin manager to retrieve JavaPluginLoader instance from, if necessary
+     * @param name name of plugin to search for
+     * @return whether plugin is loaded
+     */
+    public boolean isJavaPluginLoaded(String name) {
+        getJavaLoaders();
+        if (javaLoaders == null) {
+            return false;
+        }
+        return javaLoaders.containsKey(name);
+    }
+
+    private static void printerr(String cause, String issue) {
+        if (issue != null) {
+            System.err.println("PythonLoader: " + cause + ", " + issue);
+        }
     }
 }

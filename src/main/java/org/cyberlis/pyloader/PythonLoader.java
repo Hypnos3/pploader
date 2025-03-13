@@ -18,10 +18,7 @@ package org.cyberlis.pyloader;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,15 +27,12 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.InvalidDescriptionException;
-import org.bukkit.plugin.InvalidPluginException;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginManager;
@@ -62,7 +56,7 @@ public class PythonLoader extends JavaPlugin {
     public void onEnable() {
         getServer().getLogger().info("[PPLoader] Start plugin");
 
-        for (Plugin p : pm.getPlugins()) {
+        for (Plugin p : pmw.getPlugins()) {
             if (p instanceof PythonPlugin && !p.isEnabled()) {
                 pmw.enablePlugin(p);
             }
@@ -97,92 +91,44 @@ public class PythonLoader extends JavaPlugin {
             Log.info("Paper not detected, using BukkitPluginManager");
         }
 
-        Consumer<File> process = null;
-        AtomicInteger foundPy = new AtomicInteger(0);
         // https://github.com/Test-Account666/PlugManX/blob/4a73d6307585f2803abf4571e409c6f0fd957857/src/main/java/com/rylinaux/plugman/pluginmanager/PaperPluginManager.java
-        try {
-            final Class paper = Class.forName("io.papermc.paper.plugin.manager.PaperPluginManagerImpl");
-            Object paperPluginManagerImpl = paper.getMethod("getInstance").invoke(null);
+        boolean needsload = true;
 
-            final Field instanceManagerF = paperPluginManagerImpl.getClass().getDeclaredField("instanceManager");
-            instanceManagerF.setAccessible(true);
-            Object instanceManager = instanceManagerF.get(paperPluginManagerImpl);
+        String errorstr = "cannot ensure that the python loader class is not loaded twice!";
+        Map<Pattern, PluginLoader> fileAssociations = pmw.getFileAssociations(errorstr);
 
-            final Method loadMethod = instanceManager.getClass().getMethod("loadPlugin", Path.class);
-            loadMethod.setAccessible(true);
-            Method enableMethod = instanceManager.getClass().getMethod("enablePlugin", Plugin.class);
-            enableMethod.setAccessible(true);
+        if (fileAssociations != null) {
+            PluginLoader loader = fileAssociations.get(PythonPluginLoader.fileFilters[0]);
+            if (loader != null) { // already loaded
+                needsload = false;
+            }
+        }
+
+        if (needsload) {
+            pmw.registerInterface(PythonPluginLoader.class);
             File directory = this.getFile().getParentFile();
             if (directory.getName().startsWith(".")) {
                 directory = directory.getParentFile();
             }
-            process = (file) -> {
+            AtomicInteger foundPy = new AtomicInteger(0);
+            Consumer<File> process = (file) -> {
                 try {
-                    getServer().getLogger().info("[PPLoader] found Python plugin \"" + file.getName() + "\" - try to load PAPER plugin");
-                    Plugin plugin =(Plugin) loadMethod.invoke(instanceManager, file.toPath());
-                    if (plugin != null) {
-                        enableMethod.invoke(instanceManager, plugin);
-                    }
+                    getServer().getLogger().info("[PPLoader] found Python plugin \"" + file.getName() + "\" - try to load bukkit/spigot plugin");
+                    Plugin plugin = pmw.loadPlugin(file);
+                    /* if (plugin != null) {
+                        pmw.enablePlugin(plugin);
+                    }*/
                     foundPy.incrementAndGet();
                 } catch (UnknownDependencyException e) {
                     e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
             };
-        } catch (Exception ignore) {
-            ignore.printStackTrace();
-            getServer().getLogger().info("seems no Paper server due to \"" + ignore.getMessage() + "\"");
-        } // Paper most likely not loaded
-        if (process == null) {
-            boolean needsload = true;
-
-            String errorstr = "cannot ensure that the python loader class is not loaded twice!";
-            Map<Pattern, PluginLoader> fileAssociations = ReflectionHelper.getFileAssociations(pm, errorstr);
-
-            if (fileAssociations != null) {
-                PluginLoader loader = fileAssociations.get(PythonPluginLoader.fileFilters[0]);
-                if (loader != null) { // already loaded
-                    needsload = false;
-                }
-            }
-
-            if (needsload) {
-                pmw.registerInterface(PythonPluginLoader.class);
-                File directory = this.getFile().getParentFile();
-                if (directory.getName().startsWith(".")) {
-                    directory = directory.getParentFile();
-                }
-                process = (file) -> {
-                    try {
-                        getServer().getLogger().info("[PPLoader] found Python plugin \"" + file.getName() + "\" - try to load bukkit/spigot plugin");
-                        Plugin plugin = pmw.loadPlugin(file);
-                        /* if (plugin != null) {
-                            pm.enablePlugin(plugin);
-                        }*/
-                        foundPy.incrementAndGet();
-                    } catch (InvalidPluginException e) {
-                        e.printStackTrace();
-                    } catch (InvalidDescriptionException e) {
-                        e.printStackTrace();
-                    } catch (UnknownDependencyException e) {
-                        e.printStackTrace();
-                    }
-                };
-
-            }
-        }
-        if (process != null) {
             loadDir(this.getFile().getParentFile(), process);
             if (foundPy.get() == 0) {
                 loadDir(this.getFile().getParentFile().getParentFile(), process);
             }
-            if (pm != null && pm.getPlugins() != null) {
-                getServer().getLogger().info("[PPLoader] " + pm.getPlugins().length + " plugins, where " + foundPy.get() + " are Python Plugins");
+            if (pmw != null && pmw.getPlugins() != null) {
+                getServer().getLogger().info("[PPLoader] " + pmw.getPlugins().length + " plugins, where " + foundPy.get() + " are Python Plugins");
             }
         }
     }
@@ -319,16 +265,9 @@ public class PythonLoader extends JavaPlugin {
               Matcher match = filter.matcher(file.getName());
               if (match.find()) {
                   try {
-                      Plugin plugin = pm.loadPlugin(file);
-                      pm.enablePlugin(plugin);
-                  } catch (InvalidPluginException e) {
-
-                      e.printStackTrace();
-                  } catch (InvalidDescriptionException e) {
-
-                      e.printStackTrace();
+                      Plugin plugin = pmw.loadPlugin(file);
+                      pmw.enablePlugin(plugin);
                   } catch (UnknownDependencyException e) {
-
                       e.printStackTrace();
                   }
               }

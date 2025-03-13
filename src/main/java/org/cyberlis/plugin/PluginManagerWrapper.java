@@ -24,10 +24,13 @@
 
 package org.cyberlis.plugin;
 
+import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginLoader;
 
 import java.io.File;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 public interface PluginManagerWrapper {
 
@@ -42,4 +45,17 @@ public interface PluginManagerWrapper {
     Plugin[] getPlugins();
 
     void registerInterface(Class<? extends PluginLoader> loader) throws IllegalArgumentException;
+
+    Map<Pattern, PluginLoader> getFileAssociations(String errorstr);
+
+    boolean isJavaPluginLoaded(String name);
+
+    public void callEvent(Event event) throws IllegalStateException;
+
+    /**
+     * Returns whether or not timing code should be used for event calls
+     *
+     * @return True if event timings are to be used
+     */
+    public boolean useTimings();
 }
