@@ -54,7 +54,7 @@ public class PythonLoader extends JavaPlugin {
     public void onDisable() {}
    
     public void onEnable() {
-        getServer().getLogger().info("[PPLoader] Start plugin");
+        getServer().getLogger().info("[PPLoader] Enable plugins");
 
         for (Plugin p : pmw.getPlugins()) {
             if (p instanceof PythonPlugin && !p.isEnabled()) {
@@ -68,7 +68,7 @@ public class PythonLoader extends JavaPlugin {
      */
     @Override
     public void onLoad() {
-        getServer().getLogger().info("[PPLoader] Start plugin");
+        getServer().getLogger().info("[PPLoader] Start plugin loader");
         try {
             getServer().getLogger().info("[PPLoader] loaded from "
                     + new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getPath());
@@ -138,7 +138,7 @@ public class PythonLoader extends JavaPlugin {
             return;
         }
         getServer().getLogger()
-                .info("[PPLoader] searching for Python Plugins in \"" + directory.getAbsolutePath() + "\\...\"");
+                .info("[PPLoader] searching for Python Plugins in \"" + directory.getAbsolutePath() + "/...\"");
         for (File file : directory.listFiles()) {
             for (Pattern filter : PythonPluginLoader.fileFilters) {
                 Matcher match = filter.matcher(file.getName());

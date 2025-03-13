@@ -16,12 +16,10 @@ Running
 3. [Re-]Start bukkit
 
 Using plugins
-*************
+*******
 
 1. Stick the plugin.pyp or .py.zip or .py.dir in your bukkit/plugins/ dir
 2. [Re-]Start bukkit
-
-
 
 API Details
 ===========
@@ -92,7 +90,7 @@ import it, because it is auto imported on plugin startup by scripts/preload.py
 in pploader.jar). Your main class must have onEnable and onDisable method.
 
 plugin.yml
-**********
+*******
 
     name: SamplePlugin
     main: SampleClass
@@ -103,7 +101,7 @@ plugin.yml
             usage: /<command>
 
 plugin.py
-*********
+*******
 
     class SampleClass(PythonPlugin):
         def onEnable(self):
@@ -126,7 +124,7 @@ You must pass EventType and EventPriority to PythonEventHandler decorator.
 Example:
 
 plugin.yml
-**********
+*******
 
     name: SamplePlugin
     main: SampleClass
@@ -137,7 +135,8 @@ plugin.yml
             usage: /<command>
 
 plugin.py
-*********
+*******
+
     from org.bukkit.event import EventPriority
     from org.bukkit.event.player import PlayerJoinEvent
 
@@ -160,9 +159,12 @@ plugin.py
         def onCommand(self, sender, command, label, args):
             return False
 
-## CHANGELOG
+CHANGELOG
+-----------------------------------
 
-1.2.2   first version in development (not executable) first adjustments for PAPER (but it seems Paper does not support Plugon interfaces from bukkit/spigot)
-1.2.1   first version in development (not executable) with build setup, fixes for new version of Jython
-1.2.0   smaller rework by [DaBr01/pploader](https://github.com/DaBr01/pploader)
-1.1.0   original plugin from [cyberlis/pploader](https://github.com/cyberlis/pploader)
+- 1.2.*   first version in development (not executable)
+  - added gradle build setup
+  - fixes for new version of Jython
+  - first adjustments for PAPER (but it seems Paper does not support Plugon interfaces from bukkit/spigot)
+- 1.2.0   smaller rework by [DaBr01/pploader](https://github.com/DaBr01/pploader)
+- 1.1.0   original plugin from [cyberlis/pploader](https://github.com/cyberlis/pploader)

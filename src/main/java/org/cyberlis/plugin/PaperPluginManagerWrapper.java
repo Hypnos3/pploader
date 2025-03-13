@@ -1,11 +1,20 @@
-package org.cyberlis.plugin;
+/*
+Copyright 2021 hypnos3@online.com
+This file is part of PPLoader.
+PPLoader is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-import org.bukkit.Bukkit;
-import org.bukkit.event.Event;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginLoader;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPluginLoader;
+PPLoader is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with PPLoader.  If not, see <http://www.gnu.org/licenses/>
+*/
+package org.cyberlis.plugin;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -17,7 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
- 
+
+import org.bukkit.Bukkit;
+import org.bukkit.event.Event;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginLoader;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPluginLoader;
+
 public class PaperPluginManagerWrapper implements PluginManagerWrapper {
     private final Object instance;
     private final Object manager;
@@ -40,7 +56,7 @@ public class PaperPluginManagerWrapper implements PluginManagerWrapper {
             throw new IllegalStateException("Failed to get instanceManager field", e);
         }
     }
- 
+
     @Override
     public Plugin loadPlugin(File file) {
         try {
@@ -52,7 +68,7 @@ public class PaperPluginManagerWrapper implements PluginManagerWrapper {
         }
         return null;
     }
- 
+
     @Override
     public void enablePlugin(Plugin plugin) {
         try {
@@ -63,7 +79,7 @@ public class PaperPluginManagerWrapper implements PluginManagerWrapper {
             e.printStackTrace();
         }
      }
- 
+
     @Override
     public void disablePlugin(Plugin plugin) {
         try {
@@ -90,11 +106,11 @@ public class PaperPluginManagerWrapper implements PluginManagerWrapper {
                 throw new IllegalStateException("Failed to close class loader", e);
             }
         }
- 
+
         System.gc();
         System.runFinalization();
     }
- 
+
     @Override
     public Plugin getPlugin(String name) {
         try {

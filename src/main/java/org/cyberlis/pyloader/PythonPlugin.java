@@ -37,7 +37,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.generator.BiomeProvider;
 import org.bukkit.generator.ChunkGenerator;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginBase;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginLogger;
@@ -48,7 +48,7 @@ import org.python.util.PythonInterpreter;
 
 /**
 */
-public class PythonPlugin implements Plugin {
+public class PythonPlugin extends PluginBase {
 private boolean isEnabled = false;
     private boolean initialized = false;
     private PluginLoader loader = null;
@@ -75,6 +75,7 @@ private boolean isEnabled = false;
      *
      * @return data folder
      */
+	@Override
     public File getDataFolder() {
         return dataFolder;
     }
@@ -362,11 +363,24 @@ private boolean isEnabled = false;
         this.dataFile = file;
     }
 
-    @Override
+    /* @Override
     public String getName() {
         return "PythonPlugin";
-    }
+    } */
 
+    /*
+	@Override
+    public final io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager<org.bukkit.plugin.Plugin> getLifecycleManager() {
+        Object lifecycleEventManager = null;
+        // private final io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager<org.bukkit.plugin.Plugin> lifecycleEventManager = org.bukkit.Bukkit
+        //        .getUnsafe().createPluginLifecycleEventManager(this, () -> this.allowsLifecycleRegistration);
+
+        return lifecycleEventManager;
+    } */
+
+    public final PluginDescriptionFile getPluginMeta() {
+        return this.description;
+    }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd,
